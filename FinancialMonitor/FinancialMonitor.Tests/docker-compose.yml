@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./FinancialMonitor
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+    volumes:
+      - sqlite-data:/app
+
+volumes:
+  sqlite-data:

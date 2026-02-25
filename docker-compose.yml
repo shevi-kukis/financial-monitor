@@ -1,0 +1,29 @@
+services:
+  api:
+    build:
+      context: ./FinancialMonitor/FinancialMonitor
+    container_name: financialmonitor-api
+    ports:
+      - "8080:8080"
+    volumes:
+      - db-data:/app
+    networks:
+      - app-network
+
+  client:
+    build:
+      context: ./financial-monitor-client
+    container_name: financialmonitor-client
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db-data:
