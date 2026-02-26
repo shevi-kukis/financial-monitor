@@ -13,9 +13,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ==========================
-// Configuration
-// ==========================
 
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection");
@@ -29,9 +26,6 @@ if (allowedOrigins is null || allowedOrigins.Length == 0)
     throw new InvalidOperationException("CORS origins not configured.");
 }
 
-// ==========================
-// Services
-// ==========================
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(connectionString));
@@ -69,9 +63,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddValidatorsFromAssemblyContaining<TransactionValidator>();
-// ==========================
-// Build
-// ==========================
+
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
@@ -80,9 +72,7 @@ using (var scope = app.Services.CreateScope())
     context.Database.EnsureCreated();
 }
 
-// ==========================
-// Middleware
-// ==========================
+
 
 if (app.Environment.IsDevelopment())
 {
@@ -92,9 +82,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowFrontend");
 
-// ==========================
-// Endpoints
-// ==========================
+
 
 app.MapTransactionRoutes();
 app.MapHub<TransactionHub>("/transactionHub");
