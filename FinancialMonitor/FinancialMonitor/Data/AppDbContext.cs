@@ -1,4 +1,4 @@
-﻿using FinancialMonitor.Modules;
+﻿using FinancialMonitor.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace FinancialMonitor.Data;

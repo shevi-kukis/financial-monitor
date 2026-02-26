@@ -7,7 +7,10 @@ import {
 } from "../store/transactionsSlice";
 import { api } from "../services/api";
 import TransactionTable from "../components/TransactionTable";
-import { TransactionStatus } from "../types/transaction";
+import {
+  TransactionStatus,
+  mapStatusToLabel,
+} from "../types/transaction";
 import "../styles/monitor.css";
 
 function MonitorPage() {
@@ -21,7 +24,14 @@ function MonitorPage() {
     const loadTransactions = async () => {
       try {
         const response = await api.get("/transactions");
-        dispatch(setInitialTransactions(response.data));
+
+        // 👇 כאן אנחנו ממירים את הסטטוס ממספר לטקסט
+        const mapped = response.data.map((t: any) => ({
+          ...t,
+          status: mapStatusToLabel(t.status),
+        }));
+
+        dispatch(setInitialTransactions(mapped));
       } catch (error) {
         console.error("Failed to load transactions", error);
       }
@@ -33,9 +43,10 @@ function MonitorPage() {
   const filteredTransactions =
     filter === "all"
       ? transactions
-      : transactions.filter(
-          (t) => t.status.toLowerCase() === filter
-        );
+      : transactions.filter((t) => {
+          const statusText = String(t.status ?? "").toLowerCase();
+          return statusText === filter;
+        });
 
   const failedCount = transactions.filter(
     (t) => t.status === TransactionStatus.Failed

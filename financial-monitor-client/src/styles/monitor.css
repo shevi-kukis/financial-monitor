@@ -89,3 +89,114 @@
     background-color: transparent;
   }
 }
+.status-failed {
+  background-color: #fff1f2;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.status-pending {
+  background-color: #fffbeb;
+  color: #b45309;
+  font-weight: 600;
+}
+
+.status-completed {
+  background-color: #ecfdf5;
+  color: #047857;
+  font-weight: 600;
+}
+body {
+  background: #f8fafc;
+}
+
+.page-container {
+  padding: 40px;
+  font-family: 'Segoe UI', sans-serif;
+  max-width: 1100px;
+  margin: auto;
+}
+
+h1 {
+  margin-bottom: 25px;
+  color: #1f2937;
+}
+
+.navbar {
+  background: #111827;
+  padding: 18px 40px;
+  display: flex;
+  align-items: center;
+}
+
+.navbar-brand {
+  color: white;
+  font-weight: bold;
+  margin-right: 30px;
+}
+
+.nav-link {
+  color: #d1d5db;
+  margin-right: 20px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: white;
+}
+
+.controls button,
+button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+}
+
+input, select {
+  padding: 8px;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+}
+
+.transaction-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.transaction-table th {
+  background: #f3f4f6;
+  text-align: left;
+  padding: 12px;
+}
+
+.transaction-table td {
+  padding: 12px;
+}
+
+.transaction-row:hover {
+  background-color: #f9fafb;
+}

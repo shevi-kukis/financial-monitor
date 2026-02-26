@@ -1,128 +1,81 @@
-# Financial Monitor – Real-Time Transaction System
+# Real-Time Financial Monitor (MVP)
 
-## Overview
+##  Overview
+This system is a high-performance, real-time transaction monitoring solution. It handles financial data ingestion via REST APIs, processes transactions asynchronously, and broadcasts live updates to connected clients using SignalR WebSockets.
 
-This project implements a real-time transaction monitoring system.
-
-The system simulates financial transactions, processes them asynchronously,
-and updates all connected clients in real time using SignalR.
-
-The UI remains responsive even under high event frequency.
+The project is built with a focus on **Scalability**, **Concurrency Safety**, and **Modern DevOps practices**.
 
 ---
 
-## Architecture
+##  Architecture & Tech Stack
 
-### Backend
-- .NET 8 Minimal API
-- Entity Framework Core
-- SQLite database
-- SignalR for real-time updates
-- Background processing for transaction lifecycle
-- Dockerized API
+### Backend (.NET 8)
+- **Minimal APIs**: Optimized for high-throughput and low latency.
+- **SignalR & Redis Backplane**: Enables real-time synchronization across multiple server instances (Pods).
+- **Entity Framework Core**: Persistent storage using SQLite with thread-safe service scoping.
+- **FluentValidation**: Robust input validation to ensure data integrity.
 
-### Frontend
-- React 19
-- TypeScript
-- Redux Toolkit
-- Vite
-- SignalR client
-- Client-side filtering
-- Animated UI transitions
-- Dockerized with Nginx
+### Frontend (React 19 + TypeScript)
+- **Redux Toolkit**: Efficient state management for real-time data streams.
+- **SignalR Client**: Live socket connection for instant UI updates.
+- **Vite**: Modern build tool for optimized frontend performance.
 
 ---
 
-## Transaction Lifecycle
+##  Distributed Architecture (The Challenge)
+**The Problem:** In a production environment with multiple replicas (e.g., 5 Kubernetes Pods), a client connected to Pod A would not normally receive updates triggered by a transaction processed on Pod B.
 
-1. A transaction is created with status **Pending**
-2. It is stored in SQLite
-3. It is immediately broadcast to all clients
-4. A background process simulates processing
-5. After a delay, status changes to **Completed** or **Failed**
-6. The update is broadcast again via SignalR
-
-This demonstrates real-time state transitions.
+**The Solution:** I implemented a Redis Backplane.
+- All SignalR instances connect to a central Redis pub/sub.
+- When a transaction status changes, the message is broadcasted through Redis to all active Pods.
+- This ensures that every client receives real-time updates regardless of which server instance they are connected to.
 
 ---
 
-## Performance Considerations
+##  Deployment & DevOps
 
-- UI uses CSS-based animations (GPU-friendly)
-- No blocking operations in render
-- Redux prevents duplicate transactions
-- Transaction list capped at 1000 entries
-- Background updates use a new DI scope to avoid DbContext concurrency issues
+### Docker (Optimized for Production)
+The project uses Multi-stage builds to minimize image size and maximize security:
+- Build Stage: Uses the full .NET SDK to compile and publish.
+- Runtime Stage: Uses the lightweight ASP.NET Runtime image, keeping the final container lean.
 
----
-
-## Concurrency Handling
-
-- Each background update creates a new service scope
-- No shared DbContext across async tasks
-- Updates are idempotent (client updates by ID, not append-only)
-- Supports multiple concurrent clients
+### Kubernetes (Scaling to 5 Replicas)
+The system is cloud-ready with provided K8s manifests:
+- Deployment: Configured with replicas: 5 and environment variables for Redis integration.
+- Service: Uses a LoadBalancer to distribute traffic across all running Pods.
 
 ---
 
-## Running with Docker
+## Testing & Quality
+The solution includes a comprehensive test suite (xUnit + Moq):
+- Unit Tests: Validating transaction logic and status transitions.
+- Concurrency Tests: Ensuring the system handles multiple simultaneous requests without DB locking issues.
+- Validation Tests: Testing edge cases for financial input data.
 
-From the root folder:
+To run tests:
+dotnet test
 
-```
-docker compose up --build
-```
+---
 
+##  Getting Started
+
+### 1. Using Docker Compose (Recommended)
+This will spin up the API, the Client, and the Redis server automatically:
+docker-compose up --build
+
+### 2. Manual Setup
 Backend:
-```
-http://localhost:8080/swagger
-```
-
-Frontend:
-```
-http://localhost:5173
-http://localhost:5174
-```
-
----
-
-## Development Mode
-
-Backend:
-```
+cd FinancialMonitor
 dotnet run
-```
 
 Frontend:
-```
+cd financial-monitor-client
+npm install
 npm run dev
-```
 
 ---
 
-## Health Endpoint
-
-```
-GET /health
-```
-
----
-
-## Possible Future Improvements
-
-- Horizontal scaling with distributed SignalR backplane
-- Persistent database container
-- Authentication & authorization
-- Integration tests
-- Monitoring & structured logging
-
----
-
-## Author Notes
-
-This project focuses on:
-
-- Clean architecture
-- Real-time systems
-- Concurrency safety
-- Performance under burst load
+##  Performance Highlights
+- Service Scoping: Each background task creates its own scope to ensure DbContext is never shared across threads.
+- Non-blocking UI: The React dashboard uses optimistic updates and efficient re-rendering to handle high-frequency data bursts.
+- Health Checks: The API includes a /health endpoint for Kubernetes liveness/readiness probes.

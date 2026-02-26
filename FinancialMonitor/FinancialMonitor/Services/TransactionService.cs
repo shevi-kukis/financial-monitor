@@ -2,7 +2,7 @@
 using FinancialMonitor.DTO;
 using FinancialMonitor.Hubs;
 using FinancialMonitor.Interfaces;
-using FinancialMonitor.Modules;
+using FinancialMonitor.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
@@ -47,6 +47,7 @@ public class TransactionService : ITransactionService
 
     public async Task<List<Transaction>> GetAllAsync()
     {
+
         return await _context.Transactions
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync();

@@ -1,12 +1,25 @@
 services:
+
+  redis:
+    image: redis:alpine
+    container_name: financial-monitor-redis
+    networks:
+      - app-network
+
   api:
     build:
       context: ./FinancialMonitor/FinancialMonitor
     container_name: financialmonitor-api
     ports:
       - "8080:8080"
+    environment:
+      # 2. הוספת מחרוזת החיבור כדי שהקוד ב-Program.cs יזהה את הרדיס
+      - ConnectionStrings__Redis=redis:6379
+      - ASPNETCORE_URLS=http://+:8080
     volumes:
       - db-data:/app
+    depends_on:
+      - redis # מוודא שרדיס עולה לפני ה-API
     networks:
       - app-network
 

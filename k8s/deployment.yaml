@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: financial-monitor-api
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: financial-monitor
+  template:
+    metadata:
+      labels:
+        app: financial-monitor
+    spec:
+      containers:
+      - name: api
+        image: your-docker-hub-user/financial-monitor-api:latest 
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ConnectionStrings__DefaultConnection
+          value: "Data Source=/app/data/finance.db"
+        - name: ConnectionStrings__Redis 
+          value: "redis-service:6379"
+        volumeMounts:
+        - name: sqlite-storage
+          mountPath: /app/data
+      volumes:
+      - name: sqlite-storage
+        persistentVolumeClaim:
+          claimName: sqlite-pvc

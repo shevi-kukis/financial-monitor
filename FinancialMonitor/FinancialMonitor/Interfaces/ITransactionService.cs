@@ -1,5 +1,5 @@
 ﻿using FinancialMonitor.DTO;
-using FinancialMonitor.Modules;
+using FinancialMonitor.Models;
 
 namespace FinancialMonitor.Interfaces;
 

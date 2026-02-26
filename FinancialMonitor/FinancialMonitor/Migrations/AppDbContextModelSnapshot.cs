@@ -17,7 +17,7 @@ namespace FinancialMonitor.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.24");
 
-            modelBuilder.Entity("FinancialMonitor.Modules.Transaction", b =>
+            modelBuilder.Entity("FinancialMonitor.Models.Transaction", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()

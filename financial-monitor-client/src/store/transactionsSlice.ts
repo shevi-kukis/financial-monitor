@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { Transaction } from "../types/transaction";
+import { mapStatusToLabel } from "../types/transaction";
 
 type FilterType = "all" | "pending" | "completed" | "failed";
 
@@ -15,22 +16,27 @@ const initialState: TransactionsState = {
   lastAddedId: null,
 };
 
+const normalizeTransaction = (t: Transaction): Transaction => ({
+  ...t,
+  status: mapStatusToLabel(t.status),
+});
+
 const transactionsSlice = createSlice({
   name: "transactions",
   initialState,
   reducers: {
     addTransaction(state, action: PayloadAction<Transaction>) {
+      const normalized = normalizeTransaction(action.payload);
+
       const existingIndex = state.transactions.findIndex(
-        (t) => t.id === action.payload.id
+        (t) => t.id === normalized.id
       );
 
       if (existingIndex !== -1) {
-        // עדכון במקום הוספה
-        state.transactions[existingIndex] = action.payload;
+        state.transactions[existingIndex] = normalized;
       } else {
-        // הוספה רגילה
-        state.transactions.unshift(action.payload);
-        state.lastAddedId = action.payload.id;
+        state.transactions.unshift(normalized);
+        state.lastAddedId = normalized.id;
 
         if (state.transactions.length > 1000) {
           state.transactions.pop();
@@ -40,14 +46,16 @@ const transactionsSlice = createSlice({
 
     addTransactionsBatch(state, action: PayloadAction<Transaction[]>) {
       action.payload.forEach((transaction) => {
+        const normalized = normalizeTransaction(transaction);
+
         const existingIndex = state.transactions.findIndex(
-          (t) => t.id === transaction.id
+          (t) => t.id === normalized.id
         );
 
         if (existingIndex !== -1) {
-          state.transactions[existingIndex] = transaction;
+          state.transactions[existingIndex] = normalized;
         } else {
-          state.transactions.unshift(transaction);
+          state.transactions.unshift(normalized);
         }
       });
 
@@ -61,7 +69,7 @@ const transactionsSlice = createSlice({
     },
 
     setInitialTransactions(state, action: PayloadAction<Transaction[]>) {
-      state.transactions = action.payload;
+      state.transactions = action.payload.map(normalizeTransaction);
       state.lastAddedId = null;
     },
 

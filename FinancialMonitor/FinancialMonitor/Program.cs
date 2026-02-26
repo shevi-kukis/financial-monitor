@@ -8,6 +8,8 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.SignalR;
 using FluentValidation;
 using FinancialMonitor.Validators;
+using Microsoft.Extensions.DependencyInjection;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,19 +38,22 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 
-builder.Services.AddSignalR()
-    .AddJsonProtocol(options =>
-    {
-        options.PayloadSerializerOptions.Converters
-            .Add(new JsonStringEnumConverter());
-    });
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
 
-builder.Services.ConfigureHttpJsonOptions(options =>
+if (!string.IsNullOrEmpty(redisConnectionString))
 {
-    options.SerializerOptions.Converters
-        .Add(new JsonStringEnumConverter());
-});
-
+    builder.Services.AddSignalR()
+    
+        .AddStackExchangeRedis(redisConnectionString, options =>
+        {
+   
+            options.Configuration.AbortOnConnectFail = false;
+        });
+}
+else
+{
+    builder.Services.AddSignalR();
+}
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
