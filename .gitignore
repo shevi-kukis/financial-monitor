@@ -3,6 +3,7 @@
 **/obj/
 *.db
 *.db-journal
+**/out/
 
 # --- Frontend (React) ---
 **/node_modules/
