@@ -1,38 +1,40 @@
 import { useState } from "react";
-import { api } from "../services/api";
+import { transactionsService } from "../services/transactionsService";
 import "./../styles/monitor.css";
 
 function AddPage() {
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("USD");
+  const [loading, setLoading] = useState(false);
 
   const generateOne = async () => {
-    await api.post("/transactions", {
-      amount: Math.floor(Math.random() * 1000),
-      currency: "USD",
-    });
+    setLoading(true);
+    await transactionsService.create(
+      Math.floor(Math.random() * 1000),
+      "USD"
+    );
+    setLoading(false);
   };
 
   const generateHundred = async () => {
+    setLoading(true);
     const requests = Array.from({ length: 100 }, () =>
-      api.post("/transactions", {
-        amount: Math.floor(Math.random() * 1000),
-        currency: "USD",
-      })
+      transactionsService.create(
+        Math.floor(Math.random() * 1000),
+        "USD"
+      )
     );
-
     await Promise.all(requests);
+    setLoading(false);
   };
 
   const submitManual = async () => {
     if (!amount) return;
 
-    await api.post("/transactions", {
-      amount: Number(amount),
-      currency,
-    });
-
+    setLoading(true);
+    await transactionsService.create(Number(amount), currency);
     setAmount("");
+    setLoading(false);
   };
 
   return (
@@ -47,17 +49,19 @@ function AddPage() {
           placeholder="Amount"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
+          disabled={loading}
         />
 
         <select
           value={currency}
           onChange={(e) => setCurrency(e.target.value)}
+          disabled={loading}
         >
           <option value="USD">USD</option>
           <option value="EUR">EUR</option>
         </select>
 
-        <button onClick={submitManual}>
+        <button onClick={submitManual} disabled={loading}>
           Add Transaction
         </button>
       </div>
@@ -65,11 +69,15 @@ function AddPage() {
       <div className="card">
         <h3>Random Generator</h3>
 
-        <button onClick={generateOne}>
+        <button onClick={generateOne} disabled={loading}>
           Generate 1
         </button>
 
-        <button onClick={generateHundred} style={{ marginLeft: "10px" }}>
+        <button
+          onClick={generateHundred}
+          style={{ marginLeft: "10px" }}
+          disabled={loading}
+        >
           Generate 100
         </button>
       </div>

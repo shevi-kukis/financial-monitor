@@ -52,11 +52,7 @@ public class TransactionServiceTests
         var service = CreateService(context);
 
         await service.AddTransactionAsync(
-            new TransactionDto
-            {
-                Amount = 10,
-                Currency = "USD"
-            });
+            new TransactionDto(10m, "USD"));
 
         var count = await context.Transactions.CountAsync();
         Assert.Equal(1, count);
@@ -70,11 +66,7 @@ public class TransactionServiceTests
         var service = CreateService(context, clientProxyMock);
 
         await service.AddTransactionAsync(
-            new TransactionDto
-            {
-                Amount = 10,
-                Currency = "USD"
-            });
+            new TransactionDto(10m, "USD"));
 
         clientProxyMock.Verify(
             c => c.SendCoreAsync(
@@ -92,11 +84,7 @@ public class TransactionServiceTests
 
         var tasks = Enumerable.Range(0, 50)
             .Select(_ => service.AddTransactionAsync(
-                new TransactionDto
-                {
-                    Amount = 20,
-                    Currency = "USD"
-                }));
+                new TransactionDto(20m, "USD")));
 
         await Task.WhenAll(tasks);
 
@@ -112,12 +100,12 @@ public class TransactionServiceTests
         var service = CreateService(context);
 
         await service.AddTransactionAsync(
-            new TransactionDto { Amount = 1, Currency = "USD" });
+            new TransactionDto(1m, "USD"));
 
         await Task.Delay(10); 
 
         await service.AddTransactionAsync(
-            new TransactionDto { Amount = 2, Currency = "USD" });
+            new TransactionDto(2m, "USD"));
 
         var results = await service.GetAllAsync();
 

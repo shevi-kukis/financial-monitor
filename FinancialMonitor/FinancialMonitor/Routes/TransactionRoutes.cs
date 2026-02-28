@@ -2,7 +2,6 @@
 using FinancialMonitor.Interfaces;
 using FinancialMonitor.Models;
 using FluentValidation;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,32 +12,37 @@ public static class TransactionRoutes
     public static void MapTransactionRoutes(this IEndpointRouteBuilder app)
     {
      
-        app.MapPost("/transactions", async Task<Results<Ok<FinancialMonitor.Models.Transaction>, ValidationProblem>> (
-    [FromBody] TransactionDto dto,
-    [FromServices] ITransactionService service,
-    [FromServices] IValidator<TransactionDto> validator) =>
+        var group = app.MapGroup("/transactions");
+
+
+        group.MapPost("/", CreateTransaction).WithName("CreateTransaction");
+        group.MapGet("/", GetAllTransactions).WithName("GetAllTransactions");
+    }
+
+    private static async Task<Results<Ok<Transaction>, ValidationProblem>> CreateTransaction(
+        [FromBody] TransactionDto dto,
+        ITransactionService service,
+        IValidator<TransactionDto> validator)
+    {
+        // 1. ולידציה אסינכרונית
+        var validationResult = await validator.ValidateAsync(dto);
+
+        if (!validationResult.IsValid)
         {
-            var validationResult = await validator.ValidateAsync(dto);
+            return TypedResults.ValidationProblem(validationResult.ToDictionary());
+        }
 
-            if (!validationResult.IsValid)
-            {
-                return TypedResults.ValidationProblem(validationResult.ToDictionary());
-            }
+        var result = await service.AddTransactionAsync(dto);
 
-            var result = await service.AddTransactionAsync(dto);
+        return TypedResults.Ok(result);
+    }
 
-          
-            return TypedResults.Ok(result);
-        })
-    .WithName("CreateTransaction");
+    private static async Task<Ok<IEnumerable<Transaction>>> GetAllTransactions(
+        ITransactionService service)
+    {
 
-  
-        app.MapGet("/transactions", async Task<Ok<IEnumerable<Transaction>>> (
-            [FromServices] ITransactionService service) =>
-        {
-            var result = await service.GetAllAsync();
-            return TypedResults.Ok(result as IEnumerable<Transaction>);
-        })
-        .WithName("GetAllTransactions");
+        var result = await service.GetAllAsync();
+        
+        return TypedResults.Ok(result.AsEnumerable());
     }
 }

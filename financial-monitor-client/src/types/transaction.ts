@@ -16,24 +16,18 @@ export type Transaction = {
 };
 
 
-export const mapStatusToLabel = (status: string | number) => {
-  switch (status) {
-    case 0:
-    case "0":
-    case "Pending":
-      return TransactionStatus.Pending;
-
-    case 1:
-    case "1":
-    case "Completed":
-      return TransactionStatus.Completed;
-
-    case 2:
-    case "2":
-    case "Failed":
-      return TransactionStatus.Failed;
-
-    default:
-      return TransactionStatus.Pending;
-  }
+const statusMap: Record<number, TransactionStatus> = {
+  0: TransactionStatus.Pending,
+  1: TransactionStatus.Completed,
+  2: TransactionStatus.Failed,
 };
+
+export const mapStatusToLabel = (status: string | number): TransactionStatus => {
+
+  return statusMap[+status] ?? TransactionStatus.Pending;
+};
+
+export const normalizeTransaction = (t: any): Transaction => ({
+  ...t,
+  status: mapStatusToLabel(t.status),
+});

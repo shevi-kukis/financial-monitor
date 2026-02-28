@@ -13,13 +13,12 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # 2. הוספת מחרוזת החיבור כדי שהקוד ב-Program.cs יזהה את הרדיס
       - ConnectionStrings__Redis=redis:6379
       - ASPNETCORE_URLS=http://+:8080
     volumes:
       - db-data:/app
     depends_on:
-      - redis # מוודא שרדיס עולה לפני ה-API
+      - redis 
     networks:
       - app-network
 
