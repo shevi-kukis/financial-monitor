@@ -6,7 +6,7 @@ using FinancialMonitor.Services;
 using FinancialMonitor.Tests.Helpers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection; 
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
 
@@ -59,10 +59,72 @@ public class TransactionServiceTests
     }
 
     [Fact]
-    public async Task AddTransaction_Should_Broadcast_Via_SignalR()
+    public async Task AddTransaction_Should_Handle_Concurrent_Calls_Safely()
+    {
+        var context = TestDbContextFactory.Create();
+        var service = CreateService(context);
+
+        const int numberOfTransactions = 100;
+
+        var tasks = Enumerable.Range(0, numberOfTransactions)
+            .Select(_ => service.AddTransactionAsync(
+                new TransactionDto(20m, "USD")));
+
+        await Task.WhenAll(tasks);
+
+        var transactions = await context.Transactions.ToListAsync();
+
+        Assert.Equal(numberOfTransactions, transactions.Count);
+
+        Assert.Equal(
+            numberOfTransactions,
+            transactions.Select(t => t.Id).Distinct().Count());
+
+
+        Assert.All(transactions,
+            t => Assert.Equal(TransactionStatus.Pending, t.Status));
+    }
+    [Fact]
+    public async Task GetAllAsync_Should_Return_Transactions_Ordered_By_CreatedAt()
+    {
+        var context = TestDbContextFactory.Create();
+        var service = CreateService(context);
+
+        await service.AddTransactionAsync(
+            new TransactionDto(1m, "USD"));
+
+        await Task.Delay(10);
+
+        await service.AddTransactionAsync(
+            new TransactionDto(2m, "USD"));
+
+        var results = await service.GetAllAsync();
+
+        Assert.Equal(2, results.Count());
+        Assert.Equal(2, results.First().Amount);
+    }
+
+
+    [Fact]
+    public async Task AddTransaction_Should_Preserve_Input_Data()
+    {
+        var context = TestDbContextFactory.Create();
+        var service = CreateService(context);
+
+        var dto = new TransactionDto(99m, "EUR");
+
+        var result = await service.AddTransactionAsync(dto);
+
+        Assert.Equal(99m, result.Amount);
+        Assert.Equal("EUR", result.Currency);
+    }
+
+    [Fact]
+    public async Task AddTransaction_Should_Broadcast_On_Create()
     {
         var context = TestDbContextFactory.Create();
         var clientProxyMock = new Mock<IClientProxy>();
+
         var service = CreateService(context, clientProxyMock);
 
         await service.AddTransactionAsync(
@@ -75,41 +137,28 @@ public class TransactionServiceTests
                 default),
             Times.Once);
     }
-
     [Fact]
-    public async Task AddTransaction_Should_Handle_Concurrent_Calls_Safely()
+    public async Task GetAllAsync_Should_Return_Empty_When_No_Data()
     {
         var context = TestDbContextFactory.Create();
         var service = CreateService(context);
-
-        var tasks = Enumerable.Range(0, 50)
-            .Select(_ => service.AddTransactionAsync(
-                new TransactionDto(20m, "USD")));
-
-        await Task.WhenAll(tasks);
-
-        var count = await context.Transactions.CountAsync();
-
-        Assert.Equal(50, count);
-    }
-
-    [Fact]
-    public async Task GetAllAsync_Should_Return_Transactions_Ordered_By_CreatedAt()
-    {
-        var context = TestDbContextFactory.Create();
-        var service = CreateService(context);
-
-        await service.AddTransactionAsync(
-            new TransactionDto(1m, "USD"));
-
-        await Task.Delay(10); 
-
-        await service.AddTransactionAsync(
-            new TransactionDto(2m, "USD"));
 
         var results = await service.GetAllAsync();
 
-        Assert.Equal(2, results.Count());
-        Assert.Equal(2, results.First().Amount); 
+        Assert.Empty(results);
     }
+    [Fact]
+    public async Task AddTransaction_Should_Set_CreatedAt()
+    {
+        var context = TestDbContextFactory.Create();
+        var service = CreateService(context);
+
+        var result = await service.AddTransactionAsync(
+            new TransactionDto(10m, "USD"));
+
+        Assert.True(result.CreatedAt <= DateTime.UtcNow);
+        Assert.True(result.CreatedAt > DateTime.UtcNow.AddMinutes(-1));
+    }
+
+    
 }

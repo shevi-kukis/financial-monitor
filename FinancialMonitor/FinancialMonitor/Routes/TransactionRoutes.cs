@@ -24,7 +24,6 @@ public static class TransactionRoutes
         ITransactionService service,
         IValidator<TransactionDto> validator)
     {
-        // 1. ולידציה אסינכרונית
         var validationResult = await validator.ValidateAsync(dto);
 
         if (!validationResult.IsValid)
