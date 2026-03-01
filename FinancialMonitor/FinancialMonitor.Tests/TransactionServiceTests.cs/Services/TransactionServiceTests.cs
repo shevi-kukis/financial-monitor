@@ -159,6 +159,45 @@ public class TransactionServiceTests
         Assert.True(result.CreatedAt <= DateTime.UtcNow);
         Assert.True(result.CreatedAt > DateTime.UtcNow.AddMinutes(-1));
     }
+[Fact]
+public async Task Concurrent_Read_And_Write_Should_Not_Throw()
+{
+    var context = TestDbContextFactory.Create();
+    var service = CreateService(context);
 
+    var writeTasks = Enumerable.Range(0, 200)
+        .Select(_ => service.AddTransactionAsync(
+            new TransactionDto(5m, "USD")));
+
+    var readTasks = Enumerable.Range(0, 200)
+        .Select(_ => service.GetAllAsync());
+
+    var allTasks = writeTasks.Cast<Task>()
+        .Concat(readTasks);
+
+    var exception = await Record.ExceptionAsync(async () =>
+        await Task.WhenAll(allTasks));
+
+    Assert.Null(exception);
+}
+[Fact]
+public async Task AddTransaction_Should_Not_Create_Duplicate_Ids()
+{
+    var context = TestDbContextFactory.Create();
+    var service = CreateService(context);
+
+    const int count = 300;
+
+    var tasks = Enumerable.Range(0, count)
+        .Select(_ => service.AddTransactionAsync(
+            new TransactionDto(1m, "USD")));
+
+    await Task.WhenAll(tasks);
+
+    var transactions = await context.Transactions.ToListAsync();
+
+    Assert.Equal(count, transactions.Count);
+    Assert.Equal(count, transactions.Select(t => t.Id).Distinct().Count());
+}
     
 }
