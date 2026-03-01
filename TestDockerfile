@@ -1,8 +1,0 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0
-
-RUN apt-get update && apt-get install -y ca-certificates
-
-COPY netspark.crt /usr/local/share/ca-certificates/netspark.crt
-RUN update-ca-certificates
-
-CMD ["curl", "https://api.nuget.org/v3/index.json"]

@@ -4,6 +4,7 @@
 *.db
 *.db-journal
 **/out/
+**/publish/
 
 # --- Frontend (React) ---
 **/node_modules/
